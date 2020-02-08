@@ -1,4 +1,4 @@
-package com.hariharan.arduinousb;
+package com.daher.arduinousb;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
