@@ -26,11 +26,13 @@ public class MainActivity extends Activity {
 
     private static final int SERIAL_BAUD_RATE = 9600;
     private static final int ARDUINO_VENDOR_ID = 0x2341;
+    private static final String END_OF_LINE = "\r\n";
     //to let our app be the default app that access USB connected devices
     public final String ACTION_USB_PERMISSION = "com.daher.arduinousb.USB_PERMISSION";
 
     Button startButton, stopButton;
     TextView tvData;
+    String streamLine = "";
 
     //USB SDK Setup required classes
     UsbManager usbManager;
@@ -104,10 +106,7 @@ public class MainActivity extends Activity {
                     break;
             }
         }
-
-
     }
-
 
     public void onClickStop(View view) {
         setUiEnabled(false);
@@ -117,12 +116,14 @@ public class MainActivity extends Activity {
     }
     private void tvAppend(final CharSequence text) {
 
-        Log.d("OTG", text.toString());
+        Log.d("OTGD", text.toString());
 
         tvData.post(new Runnable() {
                 @Override
                 public void run() {
-                    tvData.setText(text + "\n" + tvData.getText());
+//                    if (text.toString().contains("\n\r"))
+//                        tvData.append("\n");
+                    tvData.append(text + "\n");//setText(tvData.getText().toString() + text);
                 }
             });
     }
@@ -137,21 +138,50 @@ public class MainActivity extends Activity {
     }
 
 
+
     //--------------- USB SERIAL HANDLING LOGIC -----------------//
     //Callback for any data received from the USB device
+
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
         @Override
         public void onReceivedData(byte[] arg0) {
-            String data = null;
+
         //Here we receive the data
             try {
-                data = new String(arg0, "UTF-8");
-                data.concat("/n");
-                tvAppend(data);
-            } catch (UnsupportedEncodingException e) {
+                String data = new String(arg0);
+
+                streamLine += data;
+
+                if (streamLine.contains(END_OF_LINE)){
+                    String[] split = streamLine.split(END_OF_LINE);
+                    String toPrint = split[0];
+                    streamLine = split[1];
+                    tvAppend(toPrint);
+                }
+
+//                if (data.contains("\r")){
+//                    String split = data.split("\r")[0];
+//                    if (!split.isEmpty()) {
+//                        String split2 = streamLine.split("\n")[0];
+//                        if (!split2.isEmpty()) {
+//                            streamLine += split2;
+//                        }
+//                    } else {
+//                        streamLine = streamLine.split("\n")[0];
+//                    }
+//                    tvAppend(MainActivity.this.streamLine);
+//                    tvAppend("\n");
+//                    streamLine = "";
+//                }
+//                else {
+//                    streamLine+=data;
+//                }
+
+                //data.concat("\n");
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-
+                //
 
         }
     };
